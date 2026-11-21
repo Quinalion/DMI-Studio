@@ -2,7 +2,7 @@
     "name": "dmi-studio",
     "displayName": "DMI Studio",
     "description": "Edit BYOND sprites, reorder animations and work with groups of DMI states and frames.",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "publisher": "quinethor",
     "contributors": [
         {

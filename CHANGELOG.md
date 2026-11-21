@@ -7,3 +7,7 @@
 # DMI Studio 1.0.1
 
 - Added logo and banner.
+
+# DMI Studio 1.0.2
+
+- Resized logo and banner.
