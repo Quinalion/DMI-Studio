@@ -1,58 +1,71 @@
-﻿# DMI Studio
+# About
 
-A BYOND sprite editor for desktop VS Code, for reordering states, adjusting animation delays, and shifting pixels across selected frames.
+This project is a DMI (BYOND's Dream Maker icon files) editor extension for desktop [VS Code](https://code.visualstudio.com).
+It focuses on group operations: reordering states, adjusting animation delays, and shifting pixels across many selected frames at once.
 
-Based on [AnturK/dmiEditor](https://github.com/AnturK/dmiEditor) 1.0.10 (commit `851d505`). Licensed under [GPL-3.0](LICENSE).
+Based on [AnturK/dmiEditor](https://github.com/AnturK/dmiEditor) 1.0.10 (commit `851d505`).
 
-## Install
+## Download
 
-Download `dmi-studio-1.0.0.vsix` and use **Extensions: Install from VSIX…**, or run:
+The latest `.vsix` is available from the Releases page of this repository.
 
-```sh
-code --install-extension dmi-studio-1.0.0.vsix
-```
+Works in desktop VS Code only.
 
-If a `.dmi` opens as binary or in another editor, use **Open With… → DMI Studio**. **DMI Studio: Create DMI File** creates a file in a project folder.
+## Usage
 
-## Editing
+### Quickstart
 
-Ctrl/Cmd-click toggles selection. Shift-click selects a range. Ctrl/Cmd+A selects everything in the current view, or just the matches when a filter is active.
+1. **Install the extension:**
+	- Run `Extensions: Install from VSIX…` from the command palette and pick the file, or run `code --install-extension dmi-studio-1.0.0.vsix`
+2. **Open or create a DMI file:**
+	- Open a `.dmi` as you would any other file. If it shows up as binary or in another editor, use `Open With… > DMI Studio`
+	- To create a new one, open a project folder and run `DMI Studio: Create DMI File`
 
-| Action | How |
-| --- | --- |
-| Open a state | Double-click its sprite. |
-| Rename a state | Double-click its name. |
-| Reorder states | Drag to the insertion line between cards, including across rows, or use the arrow buttons. Selected states move as a block and keep their order. |
-| Sort states | **Sort** or **DMI Studio: Sort States**. Sorting ignores case and puts `walk2` before `walk10`. |
-| Reorder animation frames | Click a column number to select all its directions. Drag it to an insertion line or use the arrow buttons. Delays and hotspots move with the column. |
+### Features
 
-The editor has search, zoom, a checkerboard background, and a choice of preview direction. You can change the DMI dimensions, frame and direction counts, delays, loop count, and movement and rewind flags. Each group edit takes one undo step.
+- Select several states or frames: Ctrl/Cmd-click toggles, Shift-click selects a range, Ctrl/Cmd+A selects everything in the current view (only the matches when a filter is active)
+- Open a state by double-clicking its sprite, rename it by double-clicking its name
+- Reorder states by dragging to the insertion line between cards, including across rows, or with the arrow buttons. A selected group moves as a block and keeps its order
+- Sort states with `Sort` or `DMI Studio: Sort States`. Sorting ignores case and puts `walk2` before `walk10`
+- Reorder animation frames: click a column number to select all its directions, then drag it or use the arrow buttons. Delays and hotspots move with the column
+- Shift pixels across all selected frames. Pixels past the frame edges are clipped, the vacated area becomes transparent, delays and hotspots stay in place
+- Cut, copy and paste groups of states or frames, including between open DMIs
+- Change DMI dimensions, frame and direction counts, delays, loop count, and the movement and rewind flags
+- Search, zoom, checkerboard background, choice of preview direction, duplicate names flagged in the list
+- Each group edit takes one undo step
+- Read-only viewing: `Open With… > DMI Preview`, or `Compare` to diff two DMI files. Compare marks added, removed, changed and reordered states, and clicking a sprite shows its frames and settings
 
-Pixel shifts affect the selected frames. Pixels past the frame edges are clipped. The vacated area becomes transparent. Delays and hotspots stay in place.
+### Copy and paste
 
-**Open With… → DMI Preview** opens a read-only view. **Compare** compares two DMI files in read-only mode and marks added, removed, changed, and reordered states. Click a sprite to inspect its frames and settings.
+Right-click a sprite or frame for `Cut`, `Copy` and `Paste`. Right-clicking a selected item keeps the selection, so the action applies to the whole group. Right-clicking an unselected item selects it first.
 
-## Copy and paste
+**In the state list**, paste inserts after the last selected state, or at the end if nothing is selected. Copies keep names, directions, frames, delays, loops, flags and hotspots. Copying between open DMIs requires matching frame sizes.
 
-Right-click a sprite or frame for **Cut**, **Copy**, and **Paste**. Right-clicking a selected item keeps the selection, so the action applies to the whole group. Right-clicking an unselected item selects it first.
+**Inside a state**, each cell is one direction at one point in the animation. Cut clears the selected cells and keeps the animation length. Paste depends on what is selected:
 
-In the state list, paste inserts after the last selected state, or at the end when nothing is selected. Copies retain names, directions, frames, delays, loops, flags, and hotspots. Duplicate names are flagged. Copying between open DMIs requires matching frame sizes.
+- One cell: pastes the whole group with its original positions in time and direction rows, adding columns on the right as needed
+- Several cells, one copied: fills every selected cell with that image
+- As many cells as were copied: replaces them pairwise in on-screen row order
 
-Inside a state, each cell holds one direction at one point in the animation. Cut clears the selected cells and keeps the animation length. Paste depends on the destination selection:
+Pasting into cells replaces pixels only. Delays and hotspots belong to columns and stay put.
 
-- One cell selected. Paste the whole group with its original positions in time and direction rows. Add columns on the right as needed.
-- Several cells selected, one cell copied. Fill every selected cell with that image.
-- The same number of cells selected and copied. Replace them pairwise in on-screen row order.
+### PNG
 
-Pasting into cells replaces pixels. Delays and hotspots belong to columns and stay in place.
+PNG sheets use the DMI frame size as the tile size, so both image dimensions must be exact multiples of it.
 
-PNG sheets use the DMI frame size as the tile size. Both image dimensions must be exact multiples of it. In the state list, paste creates one state per tile in row order. In the frame grid, image rows map to directions when they fit. Larger sheets fill consecutive frames in the destination direction.
+- In the state list, paste creates one state per tile, in row order
+- In the frame grid, image rows map to directions when they fit. Larger sheets fill consecutive frames in the destination direction
 
-The full selection goes to the clipboard as `text/plain`, with the header `DMI Studio clipboard/1`, a newline, and JSON. When the webview supports image access, Copy also exports the first selected item as `image/png`. DMI Studio uses the text data to paste the full group.
+### Clipboard format
 
-## Building
+The full selection goes to the clipboard as `text/plain`: the header `DMI Studio clipboard/1`, a newline, then JSON. This is what lets a group paste between windows. If the webview allows image access, Copy also exports the first selected item as `image/png`.
 
-Requires Git and Node.js 22.12+ or 24 LTS.
+## Building the Project
+
+### Requirements
+
+- [Git](https://git-scm.com)
+- [Node.js](https://nodejs.org) 22.12+ or 24 LTS
 
 ```sh
 npm ci
@@ -60,4 +73,12 @@ npm test -- --runInBand
 npm run package
 ```
 
-The pinned png-codec fork writes BYOND's compressed `Description` chunk immediately after `IHDR`. esbuild bundles the Codicon stylesheet and font from the editor's CSS import.
+The VSIX ends up in the repo root. To debug, open the folder in VS Code and run `Run Extension` (F5).
+
+Two build details worth knowing: the pinned png-codec fork writes BYOND's compressed `Description` chunk right after `IHDR`, and esbuild bundles the Codicon stylesheet and font from the editor's CSS import.
+
+## LICENSE
+
+**GPL-3.0**, for more details see the [LICENSE](./LICENSE).
+
+Originally created by [AnturK](https://github.com/AnturK) at https://github.com/AnturK/dmiEditor
