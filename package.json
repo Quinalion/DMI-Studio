@@ -2,7 +2,7 @@
     "name": "dmi-studio",
     "displayName": "DMI Studio",
     "description": "Edit BYOND sprites, reorder animations and work with groups of DMI states and frames.",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "publisher": "quinethor",
     "contributors": [
         {
@@ -26,8 +26,9 @@
     "icon": "assets/icon.png",
     "license": "GPL-3.0",
     "repository": {
-        "type":"git",
-        "url":"https://github.com/Quinalion/dmiStudio"},
+        "type": "git",
+        "url": "https://github.com/Quinalion/DMI-Studio"
+    },
     "keywords": [
         "DMI",
         "Editor",
@@ -44,7 +45,7 @@
     "contributes": {
         "customEditors": [
             {
-                "viewType": "dmiStudio.editor",
+                "viewType": "DMI-Studio.editor",
                 "displayName": "DMI Studio",
                 "priority": "default",
                 "selector": [
@@ -54,7 +55,7 @@
                 ]
             },
             {
-                "viewType": "dmiStudio.preview",
+                "viewType": "DMI-Studio.preview",
                 "displayName": "DMI Preview",
                 "priority": "option",
                 "selector": [
@@ -67,7 +68,7 @@
         "configuration": {
             "title": "DMI Studio",
             "properties": {
-                "dmiStudio.defaultZoom": {
+                "DMI-Studio.defaultZoom": {
                     "type": "integer",
                     "default": 2,
                     "description": "Default zoom level for DMI Studio"
@@ -76,18 +77,18 @@
         },
         "commands": [
             {
-                "command": "dmiStudio.new",
+                "command": "DMI-Studio.new",
                 "title": "Create DMI File",
                 "category": "DMI Studio"
             },
             {
-                "command": "dmiStudio.sort",
+                "command": "DMI-Studio.sort",
                 "title": "Sort States",
                 "category": "DMI Studio",
-                "enablement": "activeCustomEditorId == dmiStudio.editor"
+                "enablement": "activeCustomEditorId == DMI-Studio.editor"
             },
             {
-                "command": "dmiStudio.compare",
+                "command": "DMI-Studio.compare",
                 "title": "Compare DMI Files",
                 "category": "DMI Studio"
             }
@@ -95,7 +96,7 @@
         "menus": {
             "explorer/context": [
                 {
-                    "command": "dmiStudio.compare",
+                    "command": "DMI-Studio.compare",
                     "when": "resourceExtname == .dmi",
                     "group": "navigation"
                 }

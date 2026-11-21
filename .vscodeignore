@@ -3,6 +3,8 @@
 !README.md
 !CHANGELOG.md
 !package.json
+!assets/banner.png
+!assets/icon.png
 !dist/editor.js
 !dist/editor.css
 !dist/extension.js
