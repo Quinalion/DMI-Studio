@@ -1,4 +1,4 @@
-# About
+# DMI Studio
 
 This project is a DMI (BYOND's Dream Maker icon files) editor extension for desktop [VS Code](https://code.visualstudio.com).
 It focuses on group operations: reordering states, adjusting animation delays, and shifting pixels across many selected frames at once.
