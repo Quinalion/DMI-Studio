@@ -1,3 +1,13 @@
+<div align="center">
+
+[<img width="800" alt="DMI Studio Banner" src="https://raw.githubusercontent.com/Quinalion/DMI-Studio/master/assets/banner.png" />][vsmp-link]
+
+<br />
+
+</div>
+
+<br />
+
 # DMI Studio
 
 This project is a DMI (BYOND's Dream Maker icon files) editor extension for desktop [VS Code](https://code.visualstudio.com).
@@ -77,8 +87,10 @@ The VSIX ends up in the repo root. To debug, open the folder in VS Code and run 
 
 Two build details worth knowing: the pinned png-codec fork writes BYOND's compressed `Description` chunk right after `IHDR`, and esbuild bundles the Codicon stylesheet and font from the editor's CSS import.
 
-## LICENSE
+## License
 
 **GPL-3.0**, for more details see the [LICENSE](./LICENSE).
 
 Originally created by [AnturK](https://github.com/AnturK) at https://github.com/AnturK/dmiEditor
+
+[vsmp-link]: https://marketplace.visualstudio.com/items?itemName=Quinethor.dmi-studio

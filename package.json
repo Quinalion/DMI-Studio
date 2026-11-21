@@ -23,6 +23,7 @@
         }
     ],
     "private": true,
+    "icon": "assets/icon.png",
     "license": "GPL-3.0",
     "repository": {
         "type":"git",
