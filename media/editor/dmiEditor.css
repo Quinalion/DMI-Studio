@@ -1,0 +1,483 @@
+@import "@vscode/codicons/dist/codicon.css";
+
+body {
+    margin: 0;
+    padding: 12px 16px 20px;
+    background: var(--vscode-editor-background, #1e1e1e);
+    color: var(--vscode-editor-foreground, #ddd);
+    font-family: var(--vscode-font-family, system-ui, sans-serif);
+    font-size: var(--vscode-font-size, 13px);
+    color-scheme: light dark;
+}
+
+.editor {
+    --spriteWidth: 32px;
+    --spriteHeight: 32px;
+    --surface: var(--vscode-sideBar-background, #252526);
+    --border: var(--vscode-panel-border, #444);
+    --muted: var(--vscode-descriptionForeground, #a8a8a8);
+    --focus: var(--vscode-focusBorder, #007fd4);
+    --hover: var(--vscode-list-hoverBackground, #2a2d2e);
+    --selection: var(--vscode-list-inactiveSelectionBackground, #37373d);
+    --foreground: var(--vscode-editor-foreground, #ddd);
+    --field: var(--vscode-input-background, #313131);
+    --fieldText: var(--vscode-input-foreground, #ddd);
+    --frameBackground: var(--vscode-editor-background, #1e1e1e);
+    user-select: none;
+}
+
+.editor[data-checkerboard] {
+    --frameBackground: repeating-conic-gradient(#a5a5a5 0% 25%, #d8d8d8 0% 50%) 0 0 / 16px 16px;
+}
+
+.toolbar,
+.controls,
+.sectionHeader,
+.batchBar,
+.frameTools,
+.stateProperties,
+.field {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.toolbar {
+    gap: 8px 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+}
+
+.sectionHeader {
+    justify-content: space-between;
+    margin: 14px 0 8px;
+}
+
+h2 {
+    min-width: 0;
+    margin: 0;
+    font-size: 1.15em;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+button,
+input,
+select {
+    font: inherit;
+    box-sizing: border-box;
+}
+
+button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 27px;
+    padding: 3px 8px;
+    border: 1px solid var(--vscode-contrastBorder, transparent);
+    border-radius: 4px;
+    background: var(--vscode-button-secondaryBackground, #383838);
+    color: var(--vscode-button-secondaryForeground, #eee);
+    cursor: pointer;
+}
+
+button:hover:enabled {
+    background: var(--vscode-button-secondaryHoverBackground, #474747);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+button.primary {
+    background: var(--vscode-button-background, #005fb8);
+    color: var(--vscode-button-foreground, white);
+}
+
+button.primary:hover:enabled {
+    background: var(--vscode-button-hoverBackground, #006bcf);
+}
+
+button.iconButton {
+    min-width: 27px;
+    padding: 3px 4px;
+    background: transparent;
+    color: var(--foreground);
+}
+
+button.iconButton:hover:enabled {
+    background: var(--vscode-toolbar-hoverBackground, var(--hover));
+}
+
+button.iconButton[aria-pressed="true"],
+button.timeHeader[aria-pressed="true"] {
+    background: var(--vscode-toolbar-activeBackground, var(--selection));
+}
+
+:focus-visible {
+    outline: 1px solid var(--focus);
+    outline-offset: 2px;
+}
+
+input:not([type="checkbox"]),
+select {
+    min-height: 25px;
+    padding: 2px 5px;
+    background: var(--field);
+    color: var(--fieldText);
+    border: 1px solid var(--vscode-input-border, transparent);
+    border-radius: 3px;
+}
+
+input:read-only {
+    user-select: text;
+}
+
+.numberInput {
+    width: 4.2ch;
+    min-width: 42px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.search {
+    position: relative;
+    min-width: 110px;
+    max-width: 260px;
+    flex: 1 1 150px;
+}
+
+.search .codicon {
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--muted);
+}
+
+.search input {
+    width: 100%;
+    padding-inline-start: 25px;
+}
+
+.toolValue,
+.selectionCount,
+.readOnly,
+.shiftControls,
+.empty {
+    color: var(--muted);
+}
+
+.toolValue {
+    min-width: 3ch;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.directionValue {
+    min-width: 5ch;
+}
+
+.compareAction {
+    margin-inline-start: auto;
+}
+
+.batchBar {
+    gap: 4px;
+    padding: 5px 0 7px;
+}
+
+.selectionCount {
+    min-width: 11ch;
+    margin-inline-end: 4px;
+}
+
+.stateList {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fill,
+        minmax(max(96px, calc(var(--spriteWidth) + 18px)), 1fr)
+    );
+    gap: 12px;
+    padding-block: 9px 13px;
+}
+
+.statePreviewBox {
+    position: relative;
+    display: grid;
+    min-width: 0;
+    justify-items: center;
+    align-content: start;
+    gap: 5px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--surface);
+    cursor: pointer;
+}
+
+[draggable="true"] {
+    cursor: grab;
+}
+
+[data-dragging] [draggable="true"] {
+    cursor: grabbing;
+}
+
+.statePreviewBox:hover,
+button.gridElement:hover:enabled {
+    background: var(--hover);
+}
+
+.statePreviewBox.selected,
+button.gridElement.selected {
+    background: var(--selection);
+    border-color: var(--focus);
+}
+
+.statePreview {
+    outline: 1px solid var(--border);
+}
+
+.stateName {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.stateName input,
+.gridHeader input {
+    width: 100%;
+    height: 1.4em;
+    min-height: 0;
+    padding: 0 3px;
+}
+
+.duplicate {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    padding: 2px;
+    background: var(--surface);
+    border-radius: 3px;
+    color: var(--vscode-editorWarning-foreground, #cca700);
+}
+
+.frame {
+    display: block;
+    width: var(--spriteWidth);
+    height: var(--spriteHeight);
+    image-rendering: pixelated;
+    background: var(--frameBackground);
+}
+
+[data-drop]::after {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 3px;
+    background: var(--focus);
+    content: "";
+    pointer-events: none;
+}
+
+[data-drop="before"]::after {
+    left: -8px;
+}
+[data-drop="after"]::after {
+    right: -8px;
+}
+
+.stateProperties {
+    gap: 8px 14px;
+}
+
+.field {
+    flex-wrap: nowrap;
+}
+
+.checkbox input {
+    margin: 0;
+    accent-color: var(--focus);
+}
+
+.directionalDetailPreview {
+    margin-block: 14px;
+    padding: 10px;
+    width: fit-content;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--surface);
+}
+
+.dirGrid {
+    display: grid;
+    grid-template-columns: repeat(3, var(--spriteWidth));
+    grid-template-rows: repeat(3, var(--spriteHeight));
+    gap: 6px;
+}
+
+.frameTools {
+    justify-content: space-between;
+}
+
+.scrollGrid {
+    overflow-x: auto;
+    padding: 5px 4px 10px;
+}
+
+.frameGrid {
+    display: grid;
+    width: max-content;
+    gap: 6px;
+}
+
+.gridHeader {
+    display: grid;
+    align-items: center;
+    padding: 2px 4px;
+    color: var(--muted);
+}
+
+.gridHeader.delay {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.timeHeader {
+    position: relative;
+}
+
+.timeHeader[data-drop="before"]::after {
+    left: -5px;
+}
+.timeHeader[data-drop="after"]::after {
+    right: -5px;
+}
+
+button.gridElement {
+    padding: 5px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.contextMenu {
+    position: fixed;
+    z-index: 5;
+    display: grid;
+    min-width: 116px;
+    padding: 4px;
+    border: 1px solid var(--vscode-menu-border, var(--border));
+    border-radius: 5px;
+    background: var(--vscode-menu-background, var(--surface));
+    color: var(--vscode-menu-foreground, var(--foreground));
+    box-shadow: 0 4px 14px var(--vscode-widget-shadow, #0006);
+}
+
+.contextMenu button {
+    justify-content: start;
+    background: transparent;
+    color: inherit;
+}
+
+.contextMenu button:hover:enabled,
+.contextMenu button:focus-visible {
+    background: var(--vscode-menu-selectionBackground, var(--selection));
+    color: var(--vscode-menu-selectionForeground, var(--foreground));
+    outline-offset: -1px;
+}
+
+.comparison {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px 8px;
+}
+
+.diffHeader,
+.diffCard,
+.diffEmpty {
+    min-width: 0;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--surface);
+}
+
+.diffHeader {
+    display: grid;
+    gap: 3px;
+    overflow-wrap: anywhere;
+}
+
+.diffHeader small,
+.diffCard small,
+.diffEmpty {
+    color: var(--muted);
+}
+
+button.diffCard {
+    justify-content: start;
+    color: var(--foreground);
+    gap: 8px;
+    text-align: start;
+}
+
+.diffCard .frame {
+    max-width: 45%;
+    height: auto;
+    object-fit: contain;
+    aspect-ratio: var(--spriteRatio);
+}
+
+.diffCard span {
+    overflow-wrap: anywhere;
+}
+
+.diffCard small {
+    margin-inline-start: auto;
+}
+
+.diffEmpty {
+    display: grid;
+    place-items: center;
+}
+
+.diffStatus,
+.comparison .empty {
+    grid-column: 1 / -1;
+}
+
+.diffStatus {
+    margin-top: 6px;
+    color: var(--vscode-gitDecoration-modifiedResourceForeground, var(--muted));
+}
+
+.diffStatus[data-status="Added"] {
+    color: var(--vscode-gitDecoration-addedResourceForeground, var(--muted));
+}
+
+.diffStatus[data-status="Removed"] {
+    color: var(--vscode-gitDecoration-deletedResourceForeground, var(--muted));
+}
+
+.error {
+    color: var(--vscode-errorForeground, #f48771);
+}
+
+@media (forced-colors: active) {
+    [data-drop]::after {
+        forced-color-adjust: none;
+        background: Highlight;
+    }
+}

@@ -1,0 +1,10 @@
+**/*
+!LICENSE
+!README.md
+!CHANGELOG.md
+!package.json
+!dist/editor.js
+!dist/editor.css
+!dist/extension.js
+!dist/codicon.ttf
+!dist/THIRD_PARTY_NOTICES.txt

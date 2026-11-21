@@ -1,0 +1,136 @@
+{
+    "name": "dmi-studio",
+    "displayName": "DMI Studio",
+    "description": "Edit BYOND sprites, reorder animations and work with groups of DMI states and frames.",
+    "version": "1.0.0",
+    "publisher": "quinethor",
+    "contributors": [
+        {
+            "name": "Quinalion",
+            "url": "https://github.com/Quinalion"
+        },
+        {
+            "name": "AnturK",
+            "url": "https://github.com/AnturK"
+        },
+        {
+            "name": "Drathek",
+            "url": "https://github.com/Drulikar"
+        },
+        {
+            "name": "_Elar_",
+            "url": "https://github.com/AlexMorgan3817"
+        }
+    ],
+    "private": true,
+    "license": "GPL-3.0",
+    "repository": {
+        "type":"git",
+        "url":"https://github.com/Quinalion/dmiStudio"},
+    "keywords": [
+        "DMI",
+        "Editor",
+        "Byond",
+        "ss13"
+    ],
+    "engines": {
+        "vscode": "^1.75.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "main": "./dist/extension.js",
+    "contributes": {
+        "customEditors": [
+            {
+                "viewType": "dmiStudio.editor",
+                "displayName": "DMI Studio",
+                "priority": "default",
+                "selector": [
+                    {
+                        "filenamePattern": "*.dmi"
+                    }
+                ]
+            },
+            {
+                "viewType": "dmiStudio.preview",
+                "displayName": "DMI Preview",
+                "priority": "option",
+                "selector": [
+                    {
+                        "filenamePattern": "*.dmi"
+                    }
+                ]
+            }
+        ],
+        "configuration": {
+            "title": "DMI Studio",
+            "properties": {
+                "dmiStudio.defaultZoom": {
+                    "type": "integer",
+                    "default": 2,
+                    "description": "Default zoom level for DMI Studio"
+                }
+            }
+        },
+        "commands": [
+            {
+                "command": "dmiStudio.new",
+                "title": "Create DMI File",
+                "category": "DMI Studio"
+            },
+            {
+                "command": "dmiStudio.sort",
+                "title": "Sort States",
+                "category": "DMI Studio",
+                "enablement": "activeCustomEditorId == dmiStudio.editor"
+            },
+            {
+                "command": "dmiStudio.compare",
+                "title": "Compare DMI Files",
+                "category": "DMI Studio"
+            }
+        ],
+        "menus": {
+            "explorer/context": [
+                {
+                    "command": "dmiStudio.compare",
+                    "when": "resourceExtname == .dmi",
+                    "group": "navigation"
+                }
+            ]
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "tsc --noEmit && node .esbuild.config.js --minify",
+        "compile": "tsc -noEmit && node .esbuild.config.js",
+        "lint": "eslint src --ext ts",
+        "watch": "node .esbuild.config.js --watch",
+        "test": "jest",
+        "package": "vsce package --no-dependencies --allow-missing-repository"
+    },
+    "devDependencies": {
+        "@jest/globals": "^29.7.0",
+        "@types/node": "^12.12.0",
+        "@types/react": "^18.0.8",
+        "@types/react-dom": "^18.0.0",
+        "@types/vscode": "^1.52.0",
+        "@typescript-eslint/eslint-plugin": "^5.19.0",
+        "@typescript-eslint/parser": "^5.19.0",
+        "@vscode/vsce": "3.6.2",
+        "esbuild": "^0.14.38",
+        "eslint": "^8.13.0",
+        "jest": "^29.7.0",
+        "prettier": "^3.0.3",
+        "ts-jest": "^29.1.1",
+        "typescript": "^5.1.0"
+    },
+    "dependencies": {
+        "@lunapaint/png-codec": "git+https://github.com/AnturK/png-codec.git#8d7be0485beda218ac3793cd8e508974392f6ecc",
+        "@pdf-lib/upng": "^1.0.1",
+        "@vscode/codicons": "^0.0.29",
+        "image-js": "^0.34.0",
+        "react": "19.0.0",
+        "react-dom": "19.0.0"
+    }
+}
