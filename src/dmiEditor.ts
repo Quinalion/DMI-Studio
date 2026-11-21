@@ -95,8 +95,8 @@ export class DmiEditorProvider
     extends Disposable
     implements vscode.CustomEditorProvider<DmiDocument>
 {
-    private static readonly editor = "dmiStudio.editor";
-    private static readonly preview = "dmiStudio.preview";
+    private static readonly editor = "DMI-Studio.editor";
+    private static readonly preview = "DMI-Studio.preview";
     private nextUntitled = 1;
 
     private readonly changes = this._register(
@@ -123,17 +123,17 @@ export class DmiEditorProvider
             vscode.window.registerCustomEditorProvider(DmiEditorProvider.preview, preview)
         );
         provider._register(
-            vscode.commands.registerCommand("dmiStudio.new", () => provider.newDmi())
+            vscode.commands.registerCommand("DMI-Studio.new", () => provider.newDmi())
         );
         provider._register(
-            vscode.commands.registerCommand("dmiStudio.sort", () => {
+            vscode.commands.registerCommand("DMI-Studio.sort", () => {
                 const active = provider.activeEditor();
                 if (active && !active.document.readOnly)
                     active.messaging.sendEvent({ type: MessageType.SortEvent });
             })
         );
         provider._register(
-            vscode.commands.registerCommand("dmiStudio.compare", (uri?: vscode.Uri) =>
+            vscode.commands.registerCommand("DMI-Studio.compare", (uri?: vscode.Uri) =>
                 provider.compareCommand(uri)
             )
         );
@@ -218,7 +218,7 @@ export class DmiEditorProvider
         ]);
         const name = (uri: vscode.Uri) => uri.path.split("/").pop() || uri.toString();
         const panel = vscode.window.createWebviewPanel(
-            "dmiStudio.comparison",
+            "DMI-Studio.comparison",
             name(original) + " ↔ " + name(modified),
             vscode.ViewColumn.Active
         );
@@ -255,7 +255,7 @@ export class DmiEditorProvider
                     type: MessageType.ReadyResponse,
                     input: input(),
                     defaultZoom:
-                        vscode.workspace.getConfiguration("dmiStudio").get<number>("defaultZoom") ||
+                        vscode.workspace.getConfiguration("DMI-Studio").get<number>("defaultZoom") ||
                         2
                 };
             case MessageType.EditEvent:
