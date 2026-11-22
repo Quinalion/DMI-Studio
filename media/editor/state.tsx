@@ -1,6 +1,6 @@
 import { FromWebviewMessage, MessageHandler, ToWebviewMessage } from "../../shared/messaging";
 
-type SessionData = { zoom?: number; openStateId?: number | null };
+type SessionData = { zoom?: number; openStateId?: number | string | null };
 
 declare function acquireVsCodeApi(): {
     postMessage(message: unknown): void;

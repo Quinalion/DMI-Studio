@@ -8,6 +8,7 @@ export const enum MessageType {
     ClipboardRead,
     ClipboardWrite,
     ClipboardResult,
+    ClipboardSuccess,
     Alert,
     SortEvent,
     CompareRequest
@@ -50,9 +51,10 @@ export type ToWebviewMessage =
 
 export type FromWebviewMessage =
     | { type: MessageType.ReadyRequest }
-    | { type: MessageType.EditEvent; data: DmiData }
+    | { type: MessageType.EditEvent; data: DmiData; label: string }
     | { type: MessageType.ClipboardRead }
     | { type: MessageType.ClipboardWrite; text: string }
+    | { type: MessageType.ClipboardSuccess; text: string }
     | { type: MessageType.Alert; text: string }
     | { type: MessageType.CompareRequest };
 

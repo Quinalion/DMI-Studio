@@ -2,7 +2,7 @@
     "name": "dmi-studio",
     "displayName": "DMI Studio",
     "description": "Edit BYOND sprites, reorder animations and work with groups of DMI states and frames.",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "publisher": "quinethor",
     "contributors": [
         {
@@ -109,7 +109,7 @@
         "lint": "eslint src --ext ts",
         "watch": "node .esbuild.config.js --watch",
         "test": "jest",
-        "package": "vsce package --no-dependencies --allow-missing-repository"
+        "package": "vsce package --no-dependencies"
     },
     "devDependencies": {
         "@jest/globals": "^29.7.0",

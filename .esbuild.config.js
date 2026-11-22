@@ -23,7 +23,7 @@ async function build() {
         }),
         esbuild.build({
             ...options,
-            entryPoints: ["media/editor/dmiEditor.tsx"],
+            entryPoints: ["media/editor/dmi-studio.tsx"],
             platform: "browser",
             loader: { ".ttf": "file" },
             assetNames: "[name]",

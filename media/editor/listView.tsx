@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo } from "react";
 import { DmiState, Dirs, Dmi, loadRgba, splitImage, stateKey } from "../../shared/dmi";
 import { moveBefore, range, sortStateOrder } from "../../shared/batch";
 import { EditableField, IconButton, SpriteImage } from "./components";
 import { BatchBar, editingText, SelectionMenu, useSelection, useSelectionMenu } from "./selection";
-import { copyState, pastedImages, pasteState, useBatchClipboard } from "./clipboard";
+import { copyState, quantity, pastedImages, pasteState, useBatchClipboard } from "./clipboard";
 import { useReorder } from "./reorder";
 
 type StateListProps = {
@@ -11,8 +11,8 @@ type StateListProps = {
     filterString: string;
     direction: Dirs;
     readOnly: boolean;
-    pushUpdate: (dmi: Dmi) => void;
-    onOpen: (index: number) => void;
+    pushUpdate: (dmi: Dmi, label: string) => void;
+    onOpen: (id: string) => void;
     sortRequested: boolean;
     consumeSortRequest: () => void;
 };
@@ -47,44 +47,50 @@ export const StateList: React.FC<StateListProps> = ({
         }
         return result;
     }, [dmi]);
-    const cardIds = useRef(new WeakMap<DmiState, number>());
-    const nextId = useRef(0);
-    const selection = useSelection(visible, readOnly ? undefined : remove);
+    const selection = useSelection(visible, readOnly ? undefined : remove, i => dmi.states[i].id);
     const { selected } = selection;
     const menu = useSelectionMenu(selection);
     const reorder = useReorder(visible, move, "states");
 
-    function update(states: DmiState[]) {
+    function update(states: DmiState[], label: string) {
         const next = new Dmi(dmi.width, dmi.height);
         next.states = states;
-        pushUpdate(next);
+        pushUpdate(next, label);
     }
 
-    function remove() {
+    function remove(verb = "Delete") {
         const group = new Set(selected);
-        update(dmi.states.filter((_, i) => !group.has(i)));
+        update(
+            dmi.states.filter((_, i) => !group.has(i)),
+            verb + " " + quantity(selected.length, "state")
+        );
         selection.replace([]);
     }
 
-    function insert(states: DmiState[]) {
+    function insert(states: DmiState[], verb = "Add") {
         const after = selected.length ? selected[selected.length - 1] + 1 : dmi.states.length;
-        update([...dmi.states.slice(0, after), ...states, ...dmi.states.slice(after)]);
-        selection.replace(range(states.length).map(i => after + i));
+        update(
+            [...dmi.states.slice(0, after), ...states, ...dmi.states.slice(after)],
+            verb + " " + quantity(states.length, "state")
+        );
+        selection.replaceKeys(states.map(state => state.id));
     }
 
-    function applyOrder(order: number[], group: number[]) {
+    function applyOrder(order: number[], group: number[], label: string) {
         if (order.every((i, j) => i === j)) return;
-        update(order.map(i => dmi.states[i]));
-        const set = new Set(group);
-        selection.replace(range(order.length).filter(i => set.has(order[i])));
+        update(
+            order.map(i => dmi.states[i]),
+            label
+        );
+        selection.replace(group);
     }
 
     function move(group: number[], before: number) {
-        applyOrder(moveBefore(dmi.states.length, group, before), group);
+        applyOrder(moveBefore(dmi.states.length, group, before), group, "Move states");
     }
 
     function sort() {
-        applyOrder(sortStateOrder(dmi.states), selected);
+        applyOrder(sortStateOrder(dmi.states), selected, "Sort states");
     }
 
     useEffect(() => {
@@ -96,12 +102,13 @@ export const StateList: React.FC<StateListProps> = ({
     const clipboard = useBatchClipboard(dmi, selected, {
         readOnly,
         canPaste: true,
+        unit: "state",
         payload: async () => ({
             kind: "states",
             states: await Promise.all(selected.map(i => copyState(dmi.states[i])))
         }),
         preview: () => dmi.states[selected[0]].buildComposite(),
-        remove,
+        remove: () => remove("Cut"),
         preparePaste: async clip => {
             let states: DmiState[];
             if (clip.kind === "states") {
@@ -136,7 +143,7 @@ export const StateList: React.FC<StateListProps> = ({
                 throw Error(
                     "All pasted sprites must be " + dmi.width + " × " + dmi.height + " px."
                 );
-            return () => insert(states);
+            return { count: states.length, apply: () => insert(states, "Paste") };
         }
     });
 
@@ -208,10 +215,9 @@ export const StateList: React.FC<StateListProps> = ({
                 {visible.map((i, position) => {
                     const state = dmi.states[i];
                     const active = selection.chosen.has(i);
-                    if (!cardIds.current.has(state)) cardIds.current.set(state, nextId.current++);
                     return (
                         <div
-                            key={cardIds.current.get(state)}
+                            key={state.id}
                             className={"statePreviewBox" + (active ? " selected" : "")}
                             role="option"
                             aria-selected={active}
@@ -226,7 +232,7 @@ export const StateList: React.FC<StateListProps> = ({
                             onClick={event => selection.click(i, event)}
                             onKeyDown={event => {
                                 if (event.target !== event.currentTarget) return;
-                                if (event.key === "Enter") onOpen(i);
+                                if (event.key === "Enter") onOpen(state.id);
                                 if (event.key === " ") {
                                     event.preventDefault();
                                     selection.click(i, event);
@@ -242,7 +248,7 @@ export const StateList: React.FC<StateListProps> = ({
                             }}
                             onDragEnd={reorder.end}
                         >
-                            <div className="statePreview" onDoubleClick={() => onOpen(i)}>
+                            <div className="statePreview" onDoubleClick={() => onOpen(state.id)}>
                                 <SpriteImage state={state} direction={direction} />
                             </div>
                             <EditableField
@@ -261,7 +267,8 @@ export const StateList: React.FC<StateListProps> = ({
                                               update(
                                                   dmi.states.map((item, index) =>
                                                       i === index ? renamed : item
-                                                  )
+                                                  ),
+                                                  "Rename state"
                                               );
                                           }
                                 }

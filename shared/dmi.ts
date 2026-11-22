@@ -39,7 +39,7 @@ export interface StateMetadata {
 export interface DmiData {
     width: number;
     height: number;
-    states: (StateMetadata & { framecount: number })[];
+    states: (StateMetadata & { framecount: number; id?: string })[];
     pixels: ArrayBuffer;
 }
 
@@ -154,6 +154,10 @@ export function splitImage(image: Image, width: number, height: number) {
     return { frames, columns, rows };
 }
 
+// The extension host and each webview allocate IDs independently.
+const sessionPrefix = Math.random().toString(36).slice(2);
+let nextStateId = 0;
+
 export class DmiState implements StateMetadata {
     frames: Image[] = [];
     delays: number[] = [];
@@ -164,7 +168,8 @@ export class DmiState implements StateMetadata {
         public loop = 0,
         public rewind = false,
         public movement = false,
-        public dirs = 1
+        public dirs = 1,
+        public readonly id = sessionPrefix + ":" + nextStateId++
     ) {}
 
     static readonly DIR_ORDER = [
@@ -207,13 +212,14 @@ export class DmiState implements StateMetadata {
         };
     }
 
-    static fromMetadata(state: StateMetadata, frames: Image[]) {
+    static fromMetadata(state: StateMetadata, frames: Image[], id?: string) {
         const result = new DmiState(
             state.name,
             state.loop,
             state.rewind,
             state.movement,
-            state.dirs
+            state.dirs,
+            id
         );
         result.frames = frames;
         result.delays = state.delays.slice();
@@ -222,7 +228,7 @@ export class DmiState implements StateMetadata {
     }
 
     clone() {
-        return DmiState.fromMetadata(this, this.frames.slice());
+        return DmiState.fromMetadata(this, this.frames.slice(), this.id);
     }
 
     set_dirs(dirs: number) {
@@ -388,6 +394,7 @@ export class Dmi {
     toData(): DmiData {
         const states = this.states.map(state => ({
             ...state.metadata(),
+            id: state.id,
             framecount: state.framecount
         }));
         const frameSize = this.width * this.height * 4;
@@ -414,7 +421,7 @@ export class Dmi {
                 offset += frameSize;
                 return image;
             });
-            return DmiState.fromMetadata(state, frames);
+            return DmiState.fromMetadata(state, frames, state.id);
         });
         return dmi;
     }
@@ -423,6 +430,16 @@ export class Dmi {
         return "file" in snapshot
             ? Dmi.parse(new Uint8Array(snapshot.file))
             : Dmi.fromData(snapshot.document);
+    }
+
+    reuseUnchangedStates(previous?: Dmi) {
+        if (!previous) return this;
+        const byId = new Map(previous.states.map(state => [state.id, state]));
+        this.states = this.states.map(state => {
+            const old = byId.get(state.id);
+            return old && sameState(old, state) ? old : state;
+        });
+        return this;
     }
 
     clone() {
@@ -437,7 +454,8 @@ export class Dmi {
         this.states = this.states.map(state =>
             DmiState.fromMetadata(
                 state,
-                state.frames.map(frame => frame.resize({ width, height }))
+                state.frames.map(frame => frame.resize({ width, height })),
+                state.id
             )
         );
     }

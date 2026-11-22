@@ -11,7 +11,7 @@ import {
     shiftPixels
 } from "../../shared/batch";
 import { BatchBar, useSelection, editingText, useSelectionMenu, SelectionMenu } from "./selection";
-import { copyFrame, pastedImages, useBatchClipboard } from "./clipboard";
+import { copyFrame, quantity, pastedImages, useBatchClipboard } from "./clipboard";
 import { useGlobalHandler } from "./useHelpers";
 import { EditableField, IconButton, SpriteImage } from "./components";
 import { useReorder } from "./reorder";
@@ -19,7 +19,7 @@ import { useReorder } from "./reorder";
 interface Props {
     state: DmiState;
     readOnly: boolean;
-    update: (state: DmiState) => void;
+    update: (state: DmiState, label: string) => void;
     updateDelay: (i: number, value: string) => void;
 }
 
@@ -34,7 +34,11 @@ export function FrameGrid({ state, readOnly, update, updateDelay }: Props) {
     const times = range(state.framecount);
     const directions = range(state.dirs);
     const order = directions.flatMap(dir => times.map(time => time * state.dirs + dir));
-    const selection = useSelection(order, readOnly ? undefined : clear);
+    const selection = useSelection(
+        order,
+        readOnly ? undefined : clear,
+        i => Math.floor(i / state.dirs) * DirNames.length + (i % state.dirs)
+    );
     const { selected } = selection;
     const columns = [...new Set(selected.map(i => Math.floor(i / state.dirs)))].sort(
         (a, b) => a - b
@@ -42,24 +46,24 @@ export function FrameGrid({ state, readOnly, update, updateDelay }: Props) {
     const menu = useSelectionMenu(selection);
     const reorder = useReorder(times, move, "timeline");
 
-    function clear() {
+    function clear(verb = "Clear") {
         const next = state.clone();
         const blank = DmiState.empty_frame(state.width, state.height);
         for (const i of selected) putFrame(next, i, blank);
-        update(next);
+        update(next, verb + " " + quantity(selected.length, "cell"));
     }
 
     function nudge(dx: number, dy: number) {
         const next = state.clone();
         for (const i of selected) putFrame(next, i, shiftPixels(state.frames[i], dx, dy));
-        update(next);
+        update(next, "Shift pixels");
     }
 
     function move(group: number[], boundary: number) {
         const order = moveBefore(state.framecount, group, boundary);
         if (order.every((value, i) => value === i)) return;
         const positions = new Map(order.map((time, i) => [time, i]));
-        update(reorderColumns(state, order));
+        update(reorderColumns(state, order), "Move frame columns");
         selection.replace(
             selected.map(
                 i => positions.get(Math.floor(i / state.dirs))! * state.dirs + (i % state.dirs)
@@ -96,12 +100,13 @@ export function FrameGrid({ state, readOnly, update, updateDelay }: Props) {
     const clipboard = useBatchClipboard(state, selected, {
         readOnly,
         canPaste: !!selected.length,
+        unit: "cell",
         payload: async () => ({
             kind: "frames",
             cells: await Promise.all(captureFrames(state, selected).map(copyFrame))
         }),
         preview: () => frameBlob(state.frames[selected[0]]),
-        remove: clear,
+        remove: () => clear("Cut"),
         preparePaste: async clip => {
             if (clip.kind === "states") throw Error("Paste states in the state list.");
             const cells =
@@ -137,9 +142,12 @@ export function FrameGrid({ state, readOnly, update, updateDelay }: Props) {
             );
             if (count !== next.framecount) next.set_framecount(count);
             for (const { target, source } of targets) putFrame(next, target, cells[source].image);
-            return () => {
-                update(next);
-                selection.replace(targets.map(entry => entry.target));
+            return {
+                count: targets.length,
+                apply: () => {
+                    update(next, "Paste into " + quantity(targets.length, "cell"));
+                    selection.replace(targets.map(entry => entry.target));
+                }
             };
         }
     });

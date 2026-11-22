@@ -11,10 +11,20 @@ import {
 import { Disposable } from "./dispose";
 import { getNonce } from "./util";
 
+const extensionNamespace = "DMI-Studio";
+
 async function readSnapshot(uri: vscode.Uri): Promise<DmiSnapshot> {
     if (uri.scheme === "untitled") return { document: new Dmi(32, 32).toData() };
     const bytes = await vscode.workspace.fs.readFile(uri);
     return { file: Uint8Array.from(bytes).buffer };
+}
+
+// Assign session IDs once, including the version restored by the very first undo.
+async function readEditorSnapshot(uri: vscode.Uri): Promise<DmiSnapshot> {
+    const snapshot = await readSnapshot(uri);
+    return "file" in snapshot
+        ? { document: (await Dmi.fromSnapshot(snapshot)).toData() }
+        : snapshot;
 }
 
 class DmiDocument extends Disposable implements vscode.CustomDocument {
@@ -26,7 +36,7 @@ class DmiDocument extends Disposable implements vscode.CustomDocument {
                 readOnly = Boolean((stat.permissions ?? 0) & vscode.FilePermission.Readonly);
             }
         }
-        const snapshot = await readSnapshot(backupId ? vscode.Uri.parse(backupId) : uri);
+        const snapshot = await readEditorSnapshot(backupId ? vscode.Uri.parse(backupId) : uri);
         return new DmiDocument(uri, snapshot, readOnly);
     }
 
@@ -54,14 +64,20 @@ class DmiDocument extends Disposable implements vscode.CustomDocument {
         return this.content;
     }
 
-    edit(data: DmiSnapshot) {
+    edit(data: DmiSnapshot, label: string) {
         if (this.readOnly) return;
         const previous = this.content;
         this.content = data;
         this.changes.fire({
-            label: "Edit DMI",
-            undo: () => this.reset(previous),
-            redo: () => this.reset(data)
+            label,
+            undo: () => {
+                this.reset(previous);
+                void vscode.window.showInformationMessage("Undid: " + label);
+            },
+            redo: () => {
+                this.reset(data);
+                void vscode.window.showInformationMessage("Redid: " + label);
+            }
         });
     }
 
@@ -86,7 +102,7 @@ class DmiDocument extends Disposable implements vscode.CustomDocument {
     }
 
     async revert(cancellation: vscode.CancellationToken) {
-        const snapshot = await readSnapshot(this.uri);
+        const snapshot = await readEditorSnapshot(this.uri);
         if (!cancellation.isCancellationRequested) this.reset(snapshot);
     }
 }
@@ -95,8 +111,8 @@ export class DmiEditorProvider
     extends Disposable
     implements vscode.CustomEditorProvider<DmiDocument>
 {
-    private static readonly editor = "DMI-Studio.editor";
-    private static readonly preview = "DMI-Studio.preview";
+    private static readonly editor = extensionNamespace + ".editor";
+    private static readonly preview = extensionNamespace + ".preview";
     private nextUntitled = 1;
 
     private readonly changes = this._register(
@@ -123,17 +139,17 @@ export class DmiEditorProvider
             vscode.window.registerCustomEditorProvider(DmiEditorProvider.preview, preview)
         );
         provider._register(
-            vscode.commands.registerCommand("DMI-Studio.new", () => provider.newDmi())
+            vscode.commands.registerCommand(extensionNamespace + ".new", () => provider.newDmi())
         );
         provider._register(
-            vscode.commands.registerCommand("DMI-Studio.sort", () => {
+            vscode.commands.registerCommand(extensionNamespace + ".sort", () => {
                 const active = provider.activeEditor();
                 if (active && !active.document.readOnly)
                     active.messaging.sendEvent({ type: MessageType.SortEvent });
             })
         );
         provider._register(
-            vscode.commands.registerCommand("DMI-Studio.compare", (uri?: vscode.Uri) =>
+            vscode.commands.registerCommand(extensionNamespace + ".compare", (uri?: vscode.Uri) =>
                 provider.compareCommand(uri)
             )
         );
@@ -218,7 +234,7 @@ export class DmiEditorProvider
         ]);
         const name = (uri: vscode.Uri) => uri.path.split("/").pop() || uri.toString();
         const panel = vscode.window.createWebviewPanel(
-            "DMI-Studio.comparison",
+            extensionNamespace + ".comparison",
             name(original) + " ↔ " + name(modified),
             vscode.ViewColumn.Active
         );
@@ -255,11 +271,12 @@ export class DmiEditorProvider
                     type: MessageType.ReadyResponse,
                     input: input(),
                     defaultZoom:
-                        vscode.workspace.getConfiguration("DMI-Studio").get<number>("defaultZoom") ||
-                        2
+                        vscode.workspace
+                            .getConfiguration(extensionNamespace)
+                            .get<number>("defaultZoom") || 2
                 };
             case MessageType.EditEvent:
-                document?.edit({ document: message.data });
+                document?.edit({ document: message.data }, message.label);
                 break;
             case MessageType.CompareRequest:
                 if (document) {
@@ -286,6 +303,9 @@ export class DmiEditorProvider
                 } catch (error) {
                     return { type: MessageType.ClipboardResult, text: "", error: String(error) };
                 }
+            case MessageType.ClipboardSuccess:
+                void vscode.window.showInformationMessage(message.text);
+                break;
             case MessageType.Alert:
                 await vscode.window.showErrorMessage(message.text);
                 break;

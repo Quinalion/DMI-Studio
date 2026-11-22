@@ -138,16 +138,21 @@ async function read(event?: ClipboardEvent): Promise<Clip> {
     throw Error("Copy DMI states, frames, or a PNG first.");
 }
 
+export function quantity(count: number, unit: "cell" | "state") {
+    return count + " " + unit + (count === 1 ? "" : "s");
+}
+
 export function useBatchClipboard(
     document: object,
     selected: number[],
     options: {
         readOnly: boolean;
         canPaste: boolean;
+        unit: "cell" | "state";
         payload: () => Promise<Payload>;
         preview: () => Promise<Blob>;
         remove: () => void;
-        preparePaste: (clip: Clip) => Promise<() => void>;
+        preparePaste: (clip: Clip) => Promise<{ apply: () => void; count: number }>;
     }
 ) {
     const selection = selected.join(",");
@@ -173,14 +178,31 @@ export function useBatchClipboard(
         const origin = version.current;
         try {
             let commit: (() => void) | undefined;
-            if (action === "paste") commit = await options.preparePaste(await read(event));
-            else {
+            let count = selected.length;
+            if (action === "paste") {
+                const paste = await options.preparePaste(await read(event));
+                commit = paste.apply;
+                count = paste.count;
+            } else {
                 await write(options.payload(), options.preview);
                 if (action === "cut") commit = options.remove;
             }
-            if (commit && mounted.current && origin === version.current) commit();
-            else if (commit && mounted.current)
+            if (!mounted.current) return;
+            if (origin !== version.current)
                 throw Error("The selection changed. Repeat the action.");
+            commit?.();
+            const verb =
+                action === "copy"
+                    ? "Copied"
+                    : action === "cut"
+                    ? "Cut"
+                    : options.unit === "cell"
+                    ? "Pasted into"
+                    : "Pasted";
+            messageHandler.sendEvent({
+                type: MessageType.ClipboardSuccess,
+                text: verb + " " + quantity(count, options.unit)
+            });
         } catch (error) {
             messageHandler.sendEvent({
                 type: MessageType.Alert,

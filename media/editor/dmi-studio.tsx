@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import "./dmiEditor.css";
+import "./dmi-studio.css";
 import { Dirs, Dmi, DmiState } from "../../shared/dmi";
 import { MessageType, ReadyResponseMessage } from "../../shared/messaging";
 import { StateDetailView } from "./detailView";
@@ -17,17 +17,16 @@ function Editor() {
     const [comparison, setComparison] = useState<Comparison>();
     const [readOnly, setReadOnly] = useState(false);
     const [error, setError] = useState<string>();
-    const [revision, setRevision] = useState(0);
     const [zoom, setZoom] = useState(1);
     const [direction, setDirection] = useState(0);
-    const [openState, setOpenState] = useState<number | null>(null);
+    const [openState, setOpenState] = useState<string | null>(null);
     const [search, setSearch] = useState("");
     const [checkerboard, setCheckerboard] = useState(false);
     const [sortRequested, setSortRequested] = useState(false);
 
-    function open(index: number | null) {
-        setOpenState(index);
-        session.save({ openStateId: index });
+    function open(id: string | null) {
+        setOpenState(id);
+        session.save({ openStateId: id });
     }
 
     function changeZoom(value: number) {
@@ -50,9 +49,10 @@ function Editor() {
                 const current = ++generation;
                 void Dmi.fromSnapshot(message.snapshot).then(updated => {
                     if (!alive || current !== generation) return;
-                    setDmi(updated);
+                    setDmi(previous => updated.reuseUnchangedStates(previous));
+                    const id = session.read().openStateId;
+                    if (id != null && !updated.states.some(state => state.id === id)) open(null);
                     setError(undefined);
-                    setRevision(value => value + 1);
                 }, report);
             }
         });
@@ -79,7 +79,8 @@ function Editor() {
                 const initial = await Dmi.fromSnapshot(input.snapshot);
                 if (!alive || generation !== 0) return;
                 setDmi(initial);
-                setOpenState(saved.openStateId ?? null);
+                const id = saved.openStateId;
+                open(typeof id === "number" ? initial.states[id]?.id ?? null : id ?? null);
             }
         }
         void initialize().catch(report);
@@ -89,9 +90,9 @@ function Editor() {
         };
     }, []);
 
-    function update(next: Dmi) {
+    function update(next: Dmi, label: string) {
         if (readOnly) return;
-        messageHandler.sendEvent({ type: MessageType.EditEvent, data: next.toData() });
+        messageHandler.sendEvent({ type: MessageType.EditEvent, data: next.toData(), label });
         setDmi(next);
     }
 
@@ -106,14 +107,14 @@ function Editor() {
             return;
         const next = dmi.clone();
         next.resize(width, height);
-        update(next);
+        update(next, "Resize sprites");
     }
 
-    function updateState(state: DmiState) {
+    function updateState(state: DmiState, label: string) {
         if (!dmi || openState === null) return;
         const next = new Dmi(dmi.width, dmi.height);
-        next.states = dmi.states.map((item, index) => (index === openState ? state : item));
-        update(next);
+        next.states = dmi.states.map(item => (item.id === openState ? state : item));
+        update(next, label);
     }
 
     if (error)
@@ -130,7 +131,7 @@ function Editor() {
         );
     const width = dmi?.width ?? 32;
     const height = dmi?.height ?? 32;
-    const current = openState === null ? undefined : dmi?.states[openState];
+    const current = dmi?.states.find(state => state.id === openState);
     const variables = {
         "--zoomFactor": zoom,
         "--spriteWidth": width * zoom + "px",
@@ -238,7 +239,7 @@ function Editor() {
                 <CompareView {...comparison} />
             ) : current ? (
                 <StateDetailView
-                    key={revision + ":" + openState}
+                    key={current.id}
                     state={current}
                     readOnly={readOnly}
                     pushUpdate={updateState}
@@ -246,7 +247,7 @@ function Editor() {
             ) : (
                 dmi && (
                     <StateList
-                        key={revision + ":" + search}
+                        key={search}
                         dmi={dmi}
                         filterString={search}
                         direction={directions[direction]}

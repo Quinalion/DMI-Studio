@@ -12,30 +12,45 @@ export function editingText(event: Event) {
         );
 }
 
-export function useSelection(order: number[], remove?: () => void) {
-    const [picked, setPicked] = useState<number[]>([]);
-    const anchor = useRef<number | null>(null);
-    const chosen = new Set(picked);
-    const selected = order.filter(i => chosen.has(i));
+type SelectionKey = string | number;
+
+export function useSelection(
+    order: number[],
+    remove?: () => void,
+    keyOf: (index: number) => SelectionKey = index => index
+) {
+    const [picked, setPicked] = useState<SelectionKey[]>([]);
+    const anchor = useRef<SelectionKey | null>(null);
+    const pickedKeys = new Set(picked);
+    const selected = order.filter(i => pickedKeys.has(keyOf(i)));
+    const chosen = new Set(selected);
+    if (selected.length < picked.length) setPicked(selected.map(keyOf));
+
+    function replaceKeys(keys: SelectionKey[]) {
+        setPicked(keys);
+        anchor.current = keys[0] ?? null;
+    }
 
     function replace(indices: number[]) {
-        setPicked(indices);
-        anchor.current = indices[0] ?? null;
+        replaceKeys(indices.map(keyOf));
     }
 
     function click(index: number, event: React.MouseEvent | React.KeyboardEvent) {
         const add = event.metaKey || event.ctrlKey;
-        if (event.shiftKey && anchor.current !== null && order.includes(anchor.current)) {
-            const from = order.indexOf(anchor.current);
+        const from = order.findIndex(i => keyOf(i) === anchor.current);
+        if (event.shiftKey && from >= 0) {
             const to = order.indexOf(index);
             const span = order.slice(Math.min(from, to), Math.max(from, to) + 1);
-            setPicked(add ? [...new Set([...selected, ...span])] : span);
+            setPicked((add ? [...new Set([...selected, ...span])] : span).map(keyOf));
         } else {
-            anchor.current = index;
-            if (!add) setPicked([index]);
+            anchor.current = keyOf(index);
+            if (!add) setPicked([keyOf(index)]);
             else
                 setPicked(
-                    chosen.has(index) ? selected.filter(i => i !== index) : [...selected, index]
+                    (chosen.has(index)
+                        ? selected.filter(i => i !== index)
+                        : [...selected, index]
+                    ).map(keyOf)
                 );
         }
     }
@@ -55,7 +70,7 @@ export function useSelection(order: number[], remove?: () => void) {
         [order, remove]
     );
 
-    return { selected, chosen, replace, click };
+    return { selected, chosen, replace, replaceKeys, click };
 }
 
 type Selection = ReturnType<typeof useSelection>;

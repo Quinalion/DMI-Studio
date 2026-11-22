@@ -22,13 +22,13 @@ export function StateDetailView({
 }: {
     state: DmiState;
     readOnly: boolean;
-    pushUpdate: (state: DmiState) => void;
+    pushUpdate: (state: DmiState, label: string) => void;
 }) {
-    function edit(change: (next: DmiState) => void) {
+    function edit(label: string, change: (next: DmiState) => void) {
         if (readOnly) return;
         const next = state.clone();
         change(next);
-        pushUpdate(next);
+        pushUpdate(next, label);
     }
 
     function editCount(value: string, apply: (count: number) => void) {
@@ -40,7 +40,7 @@ export function StateDetailView({
         const delay = Number(value);
         if (!value.trim() || !Number.isFinite(delay)) return;
         if ((state.delays[index] ?? 1) === Math.abs(delay)) return;
-        edit(next => {
+        edit("Change frame delay", next => {
             next.delays = Array.from({ length: state.framecount }, (_, i) =>
                 i === index ? Math.abs(delay) : state.delays[i] ?? 1
             );
@@ -60,7 +60,7 @@ export function StateDetailView({
                         value={state.name}
                         readOnly={readOnly}
                         onChange={name =>
-                            edit(next => {
+                            edit("Rename state", next => {
                                 next.name = name;
                             })
                         }
@@ -73,7 +73,7 @@ export function StateDetailView({
                         value={state.dirs}
                         onChange={event => {
                             const value = Number(event.target.value);
-                            edit(next => next.set_dirs(value));
+                            edit("Change directions", next => next.set_dirs(value));
                         }}
                     >
                         <option value={1}>1</option>
@@ -92,7 +92,7 @@ export function StateDetailView({
                         onChange={value =>
                             editCount(value, count => {
                                 if (count !== state.framecount)
-                                    edit(next => next.set_framecount(count));
+                                    edit("Change frame count", next => next.set_framecount(count));
                             })
                         }
                     />
@@ -109,7 +109,7 @@ export function StateDetailView({
                         onChange={value =>
                             editCount(value, count => {
                                 if (count !== state.loop)
-                                    edit(next => {
+                                    edit("Change loop count", next => {
                                         next.loop = count;
                                     });
                             })
@@ -122,7 +122,7 @@ export function StateDetailView({
                         disabled={readOnly}
                         checked={state.loop === 0}
                         onChange={() =>
-                            edit(next => {
+                            edit("Change loop count", next => {
                                 next.loop = next.loop === 0 ? 1 : 0;
                             })
                         }
@@ -135,7 +135,7 @@ export function StateDetailView({
                         disabled={readOnly}
                         checked={state.movement}
                         onChange={() =>
-                            edit(next => {
+                            edit("Change movement flag", next => {
                                 next.movement = !next.movement;
                             })
                         }
@@ -148,7 +148,7 @@ export function StateDetailView({
                         disabled={readOnly}
                         checked={state.rewind}
                         onChange={() =>
-                            edit(next => {
+                            edit("Change rewind flag", next => {
                                 next.rewind = !next.rewind;
                             })
                         }
@@ -172,7 +172,6 @@ export function StateDetailView({
                 )}
             </div>
             <FrameGrid
-                key={state.dirs}
                 state={state}
                 readOnly={readOnly}
                 update={pushUpdate}

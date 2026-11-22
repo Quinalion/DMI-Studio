@@ -26,7 +26,7 @@ Works in desktop VS Code only.
 ### Quickstart
 
 1. **Install the extension:**
-	- Run `Extensions: Install from VSIX…` from the command palette and pick the file, or run `code --install-extension dmi-studio-1.0.0.vsix`
+	- Run `Extensions: Install from VSIX…` from the command palette and pick the downloaded file, or run `code --install-extension dmi-studio-<version>.vsix` with the downloaded version number.
 2. **Open or create a DMI file:**
 	- Open a `.dmi` as you would any other file. If it shows up as binary or in another editor, use `Open With… > DMI Studio`
 	- To create a new one, open a project folder and run `DMI Studio: Create DMI File`
@@ -43,7 +43,7 @@ Works in desktop VS Code only.
 - Change DMI dimensions, frame and direction counts, delays, loop count, and the movement and rewind flags
 - Search, zoom, checkerboard background, choice of preview direction, duplicate names flagged in the list
 - Each group edit takes one undo step
-- Read-only viewing: `Open With… > DMI Preview`, or `Compare` to diff two DMI files. Compare marks added, removed, changed and reordered states, and clicking a sprite shows its frames and settings
+- Read-only viewing: `Open With… > DMI Studio Preview`, or `Compare` to diff two DMI files. Compare marks added, removed, changed and reordered states, and clicking a sprite shows its frames and settings
 
 ### Copy and paste
 
@@ -93,4 +93,4 @@ Two build details worth knowing: the pinned png-codec fork writes BYOND's compre
 
 Originally created by [AnturK](https://github.com/AnturK) at https://github.com/AnturK/dmiEditor
 
-[vsmp-link]: https://marketplace.visualstudio.com/items?itemName=Quinethor.dmi-studio
+[vsmp-link]: https://marketplace.visualstudio.com/items?itemName=quinethor.dmi-studio
